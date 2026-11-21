@@ -1,0 +1,12 @@
+# stats-service.yml - a stable address for the stats service
+apiVersion: v1
+kind: Service
+metadata:
+  name: stats             # השם ש-nginx.conf מחפש
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: stats            # התווית מ-stats-deployment.yml
+  ports:
+    - port: 3000          # הפורט ש-nginx פונה אליו
+      targetPort: 3000    # הפורט של Node.js בקונטיינר

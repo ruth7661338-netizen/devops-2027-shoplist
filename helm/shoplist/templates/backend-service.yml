@@ -1,0 +1,12 @@
+# backend-service.yml - a stable address for the backend
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend             # השם שבו nginx.conf ו-stats פונים ל-backend
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: backend            # התווית מ-backend-deployment.yml
+  ports:
+    - port: 5000            # הפורט של ה-Service
+      targetPort: 5000      # הפורט של Flask בקונטיינר

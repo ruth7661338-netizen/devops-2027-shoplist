@@ -1,0 +1,35 @@
+# stats-deployment.yml - the Node.js stats service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stats
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.stats.replicas }}
+  selector:
+    matchLabels:
+      app: stats                  # התווית שה-Service מחפש
+  template:
+    metadata:
+      labels:
+        app: stats                # אותה תווית בדיוק
+    spec:
+      containers:
+        - name: stats
+          image: {{ .Values.stats.image.repository }}:{{ .Values.stats.image.tag }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}  # ה-image נבנה מקומית
+          env:
+            - name: BACKEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config        # שם ה-ConfigMap מ-app-config.yml
+                  key: BACKEND_URL        # המפתח שמחזיק את הכתובת של ה-backend
+          resources:
+            requests:
+              cpu: {{ .Values.stats.resources.requests.cpu | quote }}
+              memory: {{ .Values.stats.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.stats.resources.limits.cpu | quote }}
+              memory: {{ .Values.stats.resources.limits.memory }}
+          ports:
+            - containerPort: 3000 # הפורט של Node.js

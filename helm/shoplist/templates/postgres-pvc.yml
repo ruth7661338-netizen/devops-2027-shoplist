@@ -1,0 +1,18 @@
+# postgres-pvc.yml - request for persistent storage. Products survive when the pod is deleted
+apiVersion: v1
+kind: PersistentVolumeClaim   # בקשה לאחסון קבוע שנשמר גם כשה-pod נמחק
+metadata:
+  name: postgres-pvc
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/resource-policy: keep   # keep the PVC (and the data) on helm uninstall
+spec:
+  accessModes:
+    - ReadWriteOnce           # רק node אחד יכול לכתוב לאחסון בכל רגע
+  resources:
+    requests:
+      storage: {{ .Values.postgres.storage }}            # גיגה-בייט 
+      
+
+
+      

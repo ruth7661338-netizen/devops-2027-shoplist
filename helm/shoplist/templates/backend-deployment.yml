@@ -1,0 +1,56 @@
+# backend-deployment.yml - the image we built, with passwords from the Secret
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      app: backend                  # התווית שלפיה ה-Deployment מזהה את ה-pods שלו
+  template:
+    metadata:
+      labels:
+        app: backend                # אותה תווית בדיוק, מודבקת על ה-pods
+    spec:
+      containers:
+        - name: backend
+          image: {{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}   # ה-image שנבנה בשלב 1, כולל התג
+          imagePullPolicy: {{ .Values.imagePullPolicy }}    # לא להוריד מהרשת, ה-image כבר במחשב
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config        # שם ה-ConfigMap מ-app-config.yml
+                  key: DB_HOST            # המפתח שמחזיק את שם ה-Service של Postgres
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB        # המפתח שמחזיק את שם המסד
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER      # המפתח שמחזיק את המשתמש
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD  # המפתח שמחזיק את הסיסמה
+          resources:
+            requests:
+              cpu: {{ .Values.backend.resources.requests.cpu | quote }}
+              memory: {{ .Values.backend.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.backend.resources.limits.cpu | quote }}
+              memory: {{ .Values.backend.resources.limits.memory }}
+          ports:
+            - containerPort: 5000   # הפורט של Flask
+          readinessProbe:
+            httpGet:
+              path: /health         # הנתיב שעונה "אני מוכן"
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
